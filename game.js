@@ -1,36 +1,23 @@
-const canvas = document.querySelector('#game');
-const ctx = canvas.getContext('2d');
-const keys = {};
-let player, bubbles, humans, score, gameOver, spawnTimer, last;
-
-function resize() { const r = canvas.getBoundingClientRect(); canvas.width = Math.floor(r.width * devicePixelRatio); canvas.height = Math.floor(r.height * devicePixelRatio); ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
-function W(){ return canvas.clientWidth; } function H(){ return canvas.clientHeight; }
-function reset(){ player={x:70,y:H()/2,r:22,speed:230,cool:0}; bubbles=[]; humans=[]; score=0; gameOver=false; spawnTimer=0; last=performance.now(); }
-function shoot(){ if(gameOver || player.cool>0) return; bubbles.push({x:player.x+25,y:player.y,r:7,v:430}); player.cool=.28; }
-function spawn(){ humans.push({x:W()+30,y:40+Math.random()*(H()-80),r:20,v:45+Math.random()*35}); }
-function circle(a,b){ return Math.hypot(a.x-b.x,a.y-b.y) < a.r+b.r; }
-function update(dt){
-  if(gameOver) return;
-  let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0), dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
-  const len=Math.hypot(dx,dy)||1; player.x=Math.max(28,Math.min(W()-28,player.x+dx/len*player.speed*dt)); player.y=Math.max(28,Math.min(H()-28,player.y+dy/len*player.speed*dt)); player.cool=Math.max(0,player.cool-dt);
-  bubbles.forEach(b=>b.x+=b.v*dt); bubbles=bubbles.filter(b=>b.x<W()+30);
-  spawnTimer-=dt; if(spawnTimer<=0){spawn();spawnTimer=Math.max(.5,1.25-score*.008);}
-  humans.forEach(h=>{h.x-=h.v*dt; if(circle(h,player)) gameOver=true;});
-  for(let i=humans.length-1;i>=0;i--) for(let j=bubbles.length-1;j>=0;j--) if(circle(humans[i],bubbles[j])){ humans.splice(i,1); bubbles.splice(j,1); score++; break; }
-  humans=humans.filter(h=>h.x>-35);
-}
-function draw(){
-  const w=W(),h=H(); ctx.clearRect(0,0,w,h);
-  ctx.fillStyle='#72c866';ctx.fillRect(0,0,w,h); ctx.fillStyle='#5aad57'; for(let x=15;x<w;x+=55){ctx.beginPath();ctx.arc(x,18+(x%4)*20,5,0,7);ctx.fill();}
-  ctx.fillStyle='#173e2b';ctx.font='bold 18px system-ui';ctx.fillText(`Puntaje: ${score}`,14,27);
-  // rana
-  ctx.fillStyle='#227342';ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,7);ctx.fill();ctx.fillStyle='#b7ef74';ctx.beginPath();ctx.arc(player.x-8,player.y-17,8,0,7);ctx.arc(player.x+8,player.y-17,8,0,7);ctx.fill();ctx.fillStyle='#172d1d';ctx.beginPath();ctx.arc(player.x-8,player.y-18,3,0,7);ctx.arc(player.x+8,player.y-18,3,0,7);ctx.fill();ctx.strokeStyle='#d4ff91';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y+2,11,0,Math.PI);ctx.stroke();
-  bubbles.forEach(b=>{ctx.fillStyle='#eaffff';ctx.strokeStyle='#4aa8d1';ctx.lineWidth=2;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,7);ctx.fill();ctx.stroke();});
-  humans.forEach(h=>{ctx.fillStyle='#39425a';ctx.fillRect(h.x-15,h.y-4,30,29);ctx.fillStyle='#f0b18c';ctx.beginPath();ctx.arc(h.x,h.y-13,12,0,7);ctx.fill();ctx.fillStyle='#242b3c';ctx.fillRect(h.x-14,h.y-25,28,7);ctx.fillStyle='#fff';ctx.font='13px sans-serif';ctx.fillText('😠',h.x-11,h.y+17);});
-  if(gameOver){ctx.fillStyle='rgba(10,25,18,.72)';ctx.fillRect(0,0,w,h);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 30px system-ui';ctx.fillText('¡Te atraparon!',w/2,h/2-10);ctx.font='18px system-ui';ctx.fillText(`Puntaje final: ${score}`,w/2,h/2+25);ctx.textAlign='left';}
-}
-function loop(t){const dt=Math.min(.04,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop);}
-addEventListener('keydown',e=>{keys[e.key]=true;if(e.code==='Space')shoot();}); addEventListener('keyup',e=>keys[e.key]=false);
-document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=true});b.addEventListener('touchend',e=>{e.preventDefault();keys[k]=false});});
-document.querySelector('#shoot').addEventListener('touchstart',e=>{e.preventDefault();shoot()}); document.querySelector('#shoot').addEventListener('click',shoot); document.querySelector('#restart').onclick=reset;
-addEventListener('resize',()=>{resize();if(player)player.y=Math.min(player.y,H()-28)}); resize();reset();requestAnimationFrame(loop);
+const C=document.querySelector('#game'),X=C.getContext('2d'),keys={},$=id=>document.querySelector(id);let hero,shots,enemies,bots,level=1,score=0,scene=0,selected='mage',running=false,last,spawn=0,power=0;
+const classes={mage:{name:'Rana Mago',emoji:'🐸✨',color:'#75e6ff',life:100,damage:24,speed:230,rate:.32,shot:'✨'},sword:{name:'Rana Espadachín',emoji:'🐸⚔️',color:'#ffe06b',life:150,damage:45,speed:245,rate:.5,shot:'⚔️'},dark:{name:'Rana Oscura',emoji:'🐸🌑',color:'#d88cff',life:90,damage:38,speed:220,rate:.4,shot:'🌑'}};
+const scenes=[['Pantano Verde','#55ad67','#24704b'],['Ciudad Humana','#687ba5','#303a60'],['Templo Lunar','#463d78','#201e4a'],['Fortaleza Final','#9a4d50','#4b202e']];
+function resize(){let r=C.getBoundingClientRect(),d=devicePixelRatio;C.width=r.width*d;C.height=r.height*d;X.setTransform(d,0,0,d,0,0)}function W(){return C.clientWidth}function H(){return C.clientHeight}
+function showClass(){document.querySelectorAll('.choice').forEach(b=>b.classList.toggle('selected',b.dataset.class===selected))}document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{selected=b.dataset.class;showClass()});
+function start(){document.querySelector('#menu').hidden=true;$('#gamebox').hidden=false;scene=0;level=1;score=0;bots=[];newLevel();running=true;last=performance.now();requestAnimationFrame(loop)}
+function newLevel(){let c=classes[selected];hero={x:70,y:H()/2,r:22,life:c.life,max:c.life,cool:0,inv:0};shots=[];enemies=[];spawn=0;power=0;scene=Math.floor((level-1)/5);$('level').textContent='Nivel '+level;$('scene').textContent=scenes[scene][0];$('score').textContent='⭐ '+score;draw()}
+function addBot(){let colors=['#9bea65','#ff9ecc','#82c9ff'];bots.push({x:55+Math.random()*40,y:70+Math.random()*(H()-140),r:16,life:70,damage:12,v:70,color:colors[bots.length%3],cool:0})}
+function fire(){let c=classes[selected];if(!running||hero.cool>0)return;let target=enemies[0],a=target?Math.atan2(target.y-hero.y,target.x-hero.x):0;shots.push({x:hero.x+20,y:hero.y,r:7,vx:Math.cos(a)*430,vy:Math.sin(a)*430,damage:c.damage,kind:'hero'});hero.cool=c.rate}
+function usePower(){if(!running||power<100)return;power=0;enemies.forEach(e=>e.life-=90);shots.push({x:hero.x,y:hero.y,r:90,life:.3,kind:'blast'})}
+function spawnEnemy(){let max=2+Math.floor(level/2);if(enemies.length>=max+3)return;let type=Math.random()<.22?'boss':'human';enemies.push({x:W()+30,y:35+Math.random()*(H()-70),r:type==='boss'?28:18,life:type==='boss'?130+level*8:35+level*5,max:type==='boss'?130+level*8:35+level*5,v:type==='boss'?25:45+level*2,damage:type==='boss'?20:8,type})}
+function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r}
+function update(dt){if(!running)return;let c=classes[selected],dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0),l=Math.hypot(dx,dy)||1;hero.x=Math.max(25,Math.min(W()-25,hero.x+dx/l*c.speed*dt));hero.y=Math.max(30,Math.min(H()-30,hero.y+dy/l*c.speed*dt));hero.cool=Math.max(0,hero.cool-dt);hero.inv=Math.max(0,hero.inv-dt);spawn-=dt;if(spawn<=0){spawnEnemy();spawn=Math.max(.35,1.05-level*.025)}
+ shots.forEach(s=>{s.x+=s.vx*dt;s.y+=s.vy*dt;if(s.life)s.life-=dt});shots=shots.filter(s=>s.x>-40&&s.x<W()+50&&s.life!==0);
+ enemies.forEach(e=>{e.x-=e.v*dt;if(hit(e,hero)&&hero.inv<=0){hero.life-=e.damage*dt;hero.inv=.2}bots.forEach(b=>{b.cool-=dt;if(hit(e,b)){e.life-=b.damage*dt}})});
+ bots.forEach(b=>{b.cool-=dt;let e=enemies[0];if(e){let a=Math.atan2(e.y-b.y,e.x-b.x);b.x+=Math.cos(a)*b.v*dt;b.y+=Math.sin(a)*b.v*dt;if(b.cool<=0){let a2=Math.atan2(e.y-b.y,e.x-b.x);shots.push({x:b.x,y:b.y,r:5,vx:Math.cos(a2)*300,vy:Math.sin(a2)*300,damage:14,kind:'bot'});b.cool=1}}});
+ for(let i=enemies.length-1;i>=0;i--){for(let j=shots.length-1;j>=0;j--){let s=shots[j];if(s.kind!=='blast'&&hit(enemies[i],s)){enemies[i].life-=s.damage;shots.splice(j,1);score+=2;power=Math.min(100,power+5);break}}if(enemies[i].life<=0){score+=enemies[i].type==='boss'?50:10;power=Math.min(100,power+12);enemies.splice(i,1)}}
+ if(hero.life<=0)return end('¡Los humanos ganaron!','La resistencia necesita otra oportunidad.','REINTENTAR');if(enemies.length===0&&spawn<0&&score>0&&Math.random()<.008){level++;if(level%5===1){return unlock()}newLevel()}$('lives').textContent='❤️ '+Math.max(0,Math.ceil(hero.life));$('score').textContent='⭐ '+score}
+function unlock(){running=false;let names=['Pantano Verde','Ciudad Humana','Templo Lunar','Fortaleza Final'];let next=Math.floor((level-1)/5);showModal('🎉 ¡Escenario desbloqueado!',`Llegaste al nivel ${level}. Ahora podés jugar en <b>${names[next]}</b>. También se unió una nueva rana bot a tu equipo.`, 'CONTINUAR',()=>{newLevel();if(bots.length<Math.min(3,Math.floor(level/5)+1))addBot();running=true;last=performance.now();requestAnimationFrame(loop)})}
+function end(t,p,b){running=false;showModal(t,p,b,start)}function showModal(t,p,b,fn){$('modalTitle').textContent=t;$('modalText').innerHTML=p;$('modalButton').textContent=b;$('modal').hidden=false;$('modalButton').onclick=()=>{$('modal').hidden=true;fn()}}
+function draw(){let [name,bg,ground]=scenes[scene];X.fillStyle=bg;X.fillRect(0,0,W(),H());X.fillStyle=ground;for(let x=0;x<W();x+=55)for(let y=35;y<H();y+=55){X.beginPath();X.arc(x+(y%30),y,3,0,7);X.fill()}X.font='24px sans-serif';X.fillText(classes[selected].emoji,hero.x-19,hero.y+9);bots.forEach(b=>{X.fillStyle=b.color;X.beginPath();X.arc(b.x,b.y,b.r,0,7);X.fill();X.font='18px sans-serif';X.fillText('🐸',b.x-11,b.y+7)});enemies.forEach(e=>{X.font=e.type==='boss'?'32px sans-serif':'25px sans-serif';X.fillText(e.type==='boss'?'🤖':'🧑',e.x-16,e.y+10);X.fillStyle='#ff6868';X.fillRect(e.x-e.r,e.y-e.r-9,e.r*2,4);X.fillStyle='#6dff79';X.fillRect(e.x-e.r,e.y-e.r-9,e.r*2*Math.max(0,e.life/e.max),4)});shots.forEach(s=>{if(s.kind==='blast'){X.strokeStyle='#d88cff';X.lineWidth=5;X.beginPath();X.arc(s.x,s.y,s.r,0,7);X.stroke()}else{X.font='18px sans-serif';X.fillText(s.kind==='bot'?'💚':classes[selected].shot,s.x-9,s.y+7)}});X.fillStyle='#fff';X.font='bold 13px system-ui';X.fillText('Poder '+Math.floor(power)+'%',12,H()-10)}
+function loop(t){let dt=Math.min(.04,(t-last)/1000);last=t;update(dt);draw();if(running)requestAnimationFrame(loop)}
+addEventListener('keydown',e=>{keys[e.key]=true;if(e.code==='Space')fire();if(e.key==='e')usePower()});addEventListener('keyup',e=>keys[e.key]=false);document.querySelectorAll('[data-key]').forEach(b=>{let k=b.dataset.key;b.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=true});b.addEventListener('touchend',e=>{e.preventDefault();keys[k]=false})});$('#shoot').addEventListener('touchstart',e=>{e.preventDefault();fire()});$('#shoot').onclick=fire;$('#power').onclick=usePower;addEventListener('resize',()=>{resize();if(hero)hero.y=Math.min(hero.y,H()-30)});resize();showClass();$('#start').onclick=start;
