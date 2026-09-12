@@ -2,15 +2,20 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ranas en Rebelión</title><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><link rel="stylesheet" href="style.css?v=20260912-1827">
+<title>Ranas en Rebelión</title><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><link rel="stylesheet" href="style.css?v=20260912-1830">
 </head>
 <body><main>
-<header><h1>🐸 RANAS EN REBELIÓN</h1><div class="sub">Las ranas contraatacan</div></header>
-<section id="menu" class="panel"><h2>Elegí tu rana</h2><div class="choices">
-<button class="choice selected" data-class="mage"><b>🐸✨</b><strong>Rana Mago</strong><small>Rayos mágicos · Equilibrada</small></button>
-<button class="choice" data-class="sword"><b>🐸⚔️</b><strong>Rana Espadachín</strong><small>Golpe cercano · Mucha vida</small></button>
-<button class="choice" data-class="dark"><b>🐸🌑</b><strong>Rana Oscura</strong><small>Orbes sombríos · Daño alto</small></button>
-</div><button id="start" class="primary">EMPEZAR AVENTURA</button><p class="tip">Cada 5 niveles se desbloquea un escenario y nuevas ranas aliadas.</p></section>
+<section id="menu" class="welcome">
+  <div class="stars">✦　·　✦　　·　✦　·　✦</div>
+  <div class="logo-frog">🐸</div>
+  <h1>RANAS<br><span>EN REBELIÓN</span></h1>
+  <p class="tagline">El pantano contraataca</p>
+  <div class="platform platform-back"></div><div class="platform platform-front"></div>
+  <div class="welcome-frog">🐸</div><div class="welcome-human">🧑</div>
+  <div class="start-area"><button id="start" class="play">▶ JUGAR</button><p>Un shooter 2D de plataformas y aventuras</p></div>
+  <div class="choices"><button class="choice selected" data-class="mage"><b>🐸✨</b><strong>MAGO</strong></button><button class="choice" data-class="sword"><b>🐸⚔️</b><strong>ESPADACHÍN</strong></button><button class="choice" data-class="dark"><b>🐸🌑</b><strong>RANA OSCURA</strong></button></div>
+  <p class="tip">Elegí tu rana y defendé el pantano.</p>
+</section>
 <section id="gamebox" hidden><div class="hud"><span id="level">Nivel 1</span><span id="scene">Pantano Verde</span><span id="score">⭐ 0</span><span id="lives">❤️ 100</span></div><canvas id="game"></canvas><div class="controls"><div class="pad"><button data-key="ArrowUp">▲</button><div><button data-key="ArrowLeft">◀</button><button data-key="ArrowDown">▼</button><button data-key="ArrowRight">▶</button></div></div><div class="actions"><button id="power">⚡<small>PODER</small></button><button id="shoot">🔮<small>ATACAR</small></button></div></div></section>
 <section id="modal" class="panel modal" hidden><h2 id="modalTitle"></h2><p id="modalText"></p><button id="modalButton" class="primary"></button></section>
-</main><script src="game.js?v=20260912-1827"></script></body></html>
+</main><script src="game.js?v=20260912-1830"></script></body></html>
